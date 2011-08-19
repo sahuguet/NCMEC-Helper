@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <title>NCMEC Social Search</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="jquery.jsonp-2.1.4.min.js"></script>
+    <script src="jquery.url.js"></script>
+    <script src="social.js"></script>
+    <script>
+
+      TRY_AGAIN = 5;
+
+      function log(msg) {
+        if (console && console.log) {
+          console.log(msg);
+        }
+      }
+
+      function processInput(e) {
+        if (e.keyCode == 13) {
+          var query = e.target.value;
+          log("Processing query ..." + query);
+          log(social_networks);
+          $('#result-panel').empty();
+          $.each(social_networks, function(index, value) {
+            var result_section = $('<div><h2>' + index + ' results for ' +  query + '</h2><ol id="' + index + '"/></div>');
+            processQuery(query, index, value, 0, TRY_AGAIN);
+            $('#result-panel').append(result_section);
+          });
+          return false;
+        }
+      }
+
+      function displayResults(obj, data, fallback) {
+        if (data.length == 0) {
+          obj.append("No result found.");
+          return;
+        }
+        $.each(data, function(index, value) {
+          obj.append($('<li><a target="new window" href="' + value['url'] + '">' + value['item'] + '</a></li>'));
+        });
+	
+      }
+
+     function moreResults(query, index, value, start, try_again) {
+       var more_link = $('<span id="more-' + index + '">more</span>'); 
+       $('#' + index).append(more_link);
+       more_link.click(function() { processQuery(query, index, value, start, try_again); });
+     }
+
+      function processQuery(query, index, value, start, try_again) {
+        log("Processing query for " + query +" "+ index +" "+ start);
+
+      $.jsonp( { url: 'http://ncmec-helper.appspot.com?callback=?',
+                 data: { 'query': query, 'site': value['domain'], 'start': start },
+                 success: function(data) { /*log('Filling ' + data + ' for ' + index);*/ $('#more-' + index).remove(); displayResults($('#' + index), data, value['fallback'] + query); moreResults(query, index, value, start + 10, TRY_AGAIN); },
+                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, index, value, start, try_again-1); } },
+                });
+      }
+
+	 
+      $(document).ready(function() {
+        $('#coverage').html("Networks supported: " + Object.keys(social_networks).join(" - "));
+        var q = $.url(location.href).param('q');
+        if (q) {
+          $('#form').attr('value', q);
+        }
+         
+      });
+
+    </script>
+
+    <style>
+      #form-panel {
+      margin:0px auto;
+      }
+      #form {
+      width: 400px;
+      font-size: 28px;
+      margin-left: 50px;
+      }
+      body {
+      font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+      }
+      #coverage {
+      margin-left:50px;
+      font-size: 11px;
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <h1>NCMEC Social Network Search</h1>
+
+    <div id="form-panel">
+      <input id="form" type="text" onkeypress="return processInput(event);"></input>
+      <div id="coverage"></div>
+    </div>
+
+    <div id="result-panel">
+    </div>
+
+  </body>
+</html>
