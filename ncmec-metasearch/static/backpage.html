@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <title>NCMEC BackPage Search</title>
+
+    <style>
+      #form-panel {
+      margin:0px auto;
+      }
+      #form {
+      width: 400px;
+      font-size: 28px;
+      margin-left: 50px;
+      }
+      body {
+      font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+      }
+      #coverage {
+      margin-left:50px;
+      font-size: 11px;
+      }
+      ._image {
+      width: 50px;
+      margin-left: 5px;
+      }
+      ._content {
+      width: 50%;
+      }
+      ._item {
+      margin-top: 20px;
+      }
+      .
+    </style>
+
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="jquery.jsonp-2.1.4.min.js"></script>
+    <script src="jquery.url.js"></script>
+    <script src="all_states.js"></script>
+    <script>
+
+      TRY_AGAIN = 5;
+
+      function log(msg) {
+        if (console && console.log) {
+        console.log(msg);
+        }
+      }
+      
+      function processInput(e) {
+        if (e.keyCode == 13) {
+          var query = e.target.value;
+          log("Processing query ..." + query);
+          $('#result-panel').empty();
+          $.each(ALL_STATES, function(index, value) {
+            var result_section = $('<div><h2>Results for ' +  value['name'] + '</h2><ol id="' + value['domain'] + '"/></div>');
+            processQuery(query, value['domain'], TRY_AGAIN);
+            $('#result-panel').append(result_section);
+          });
+          return false;
+        }
+      }
+
+      function processQuery(query, domain, try_again) {
+        log("Processing query for " + query +" "+ domain);
+
+      $.jsonp( { url: 'http://ncmec-metasearch.appspot.com/backpage?callback=?',
+                 data: { 'query': query, 'state': domain, 'max_results': 50 },
+                 success: function(data) { displayResults($('#' + domain), data, query); },
+                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, domain, try_again-1); } },
+                });
+      }
+
+      function displayResults(obj, data) {
+        if (data.length == 0) {
+          obj.append("No result found.");
+          return;
+        };
+        $.each(data, function(index, value) {
+          var item = $('<li class="_item"/>');
+          obj.append(item);
+          displaySingleItem(item, value);
+        });
+      };
+
+      function displaySingleItem(item, value) {
+        item.append($('<div>' + value['title'] + '</div>'));
+        item.append($('<div>' + value['datePosted'] + '</div>'));
+        item.append($('<div><a class="_link" href="' + value['url'] + '">' + value['url'] + '</a></div>'));
+        item.append($('<div class ="_content">' + value['content'] + '</div>'));
+        var images = $('<div class ="_images"/>');
+        item.append(images);
+        $.each(value['images'], function(index, imgSrc) {
+          var image = $('<a target="new_window" href="' + imgSrc + '"/>');
+          image.append($('<img class="_image" src="' + imgSrc + '"/>'));
+          images.append(image);
+        });
+      }
+        
+      
+
+      $(document).ready(function() {
+      
+      });
+    </script>
+
+  </head>
+  <body>
+    <h1>NCMEC BackPane Search</h1>
+
+    <div id="form-panel">
+      <input id="form" type="text" onkeypress="return processInput(event);"></input>
+    </div>
+
+    <div id="result-panel">
+    </div>
+
+  </body>
+</html>

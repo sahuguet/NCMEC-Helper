@@ -22,6 +22,7 @@ import urllib
 from BeautifulSoup import BeautifulSoup
 import simplejson
 import logging
+import backpage
 
 def scrapeGoogle(query, site, start):
     entity = urllib.quote(query)
@@ -50,8 +51,19 @@ class MainHandler(webapp.RequestHandler):
             data = "%s(%s)" % (self.request.get('callback'), data)
         self.response.out.write(data)
 
+class BackpageHandler(webapp.RequestHandler):
+    def get(self):
+        query = self.request.get('query')
+        state = self.request.get('state')
+        max_results = self.request.get('max_results', '50')
+        data = simplejson.dumps(backpage.scrapeBackpage(query, state, int(max_results)))
+        if self.request.get('callback'):
+            data = "%s(%s)" % (self.request.get('callback'), data)
+        self.response.out.write(data)
+
 def main():
-    application = webapp.WSGIApplication([('/', MainHandler)],
+    application = webapp.WSGIApplication([('/', MainHandler),
+                                          ('/backpage', BackpageHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 
