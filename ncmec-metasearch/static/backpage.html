@@ -35,30 +35,19 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     <script src="jquery.jsonp-2.1.4.min.js"></script>
     <script src="jquery.url.js"></script>
-    <script src="all_states.js"></script>
+    <script src="all_locations.js"></script>
     <script>
 
       TRY_AGAIN = 5;
 
       function log(msg) {
         if (console && console.log) {
-        console.log(msg);
+          console.log(msg);
         }
+       return;
       }
       
-      function processInput(e) {
-        if (e.keyCode == 13) {
-          var query = e.target.value;
-          log("Processing query ..." + query);
-          $('#result-panel').empty();
-          $.each(ALL_STATES, function(index, value) {
-            var result_section = $('<div><h2>Results for ' +  value['name'] + '</h2><ol id="' + value['domain'] + '"/></div>');
-            processQuery(query, value['domain'], TRY_AGAIN);
-            $('#result-panel').append(result_section);
-          });
-          return false;
-        }
-      }
+   
 
       function processQuery(query, domain, try_again) {
         log("Processing query for " + query +" "+ domain);
@@ -66,7 +55,7 @@
       $.jsonp( { url: 'http://ncmec-metasearch.appspot.com/backpage?callback=?',
                  data: { 'query': query, 'state': domain, 'max_results': 50 },
                  success: function(data) { displayResults($('#' + domain), data, query); },
-                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, domain, try_again-1); } },
+                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, domain, try_again-1); } }
                 });
       }
 
@@ -100,15 +89,29 @@
 
       $(document).ready(function() {
       
+      $('#form').keypress(function(event) {
+           if (event.which == 13) {
+          var query = event.target.value;
+          log("Processing query ..." + query);
+          $('#result-panel').empty();
+          $.each(ALL_LOCATIONS, function(index, value) {
+            var result_section = $('<div><h2>Results for ' +  value['name'] + '</h2><ol id="' + value['domain'] + '"/></div>');
+            processQuery(query, value['domain'], TRY_AGAIN);
+            $('#result-panel').append(result_section);
+          });
+          return false;
+        }
+      });
+
       });
     </script>
 
   </head>
   <body>
-    <h1>NCMEC BackPane Search</h1>
+    <h1>NCMEC BackPage Search</h1>
 
     <div id="form-panel">
-      <input id="form" type="text" onkeypress="return processInput(event);"></input>
+      <input id="form" type="text"></input>
     </div>
 
     <div id="result-panel">

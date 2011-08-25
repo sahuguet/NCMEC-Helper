@@ -15,21 +15,6 @@
         }
       }
 
-      function processInput(e) {
-        if (e.keyCode == 13) {
-          var query = e.target.value;
-          log("Processing query ..." + query);
-          log(social_networks);
-          $('#result-panel').empty();
-          $.each(social_networks, function(index, value) {
-            var result_section = $('<div><h2>' + index + ' results for ' +  query + '</h2><ol id="' + index + '"/></div>');
-            processQuery(query, index, value, 0, TRY_AGAIN);
-            $('#result-panel').append(result_section);
-          });
-          return false;
-        }
-      }
-
       function displayResults(obj, data, fallback) {
         if (data.length == 0) {
           obj.append("No result found.");
@@ -53,18 +38,42 @@
       $.jsonp( { url: 'http://ncmec-helper.appspot.com?callback=?',
                  data: { 'query': query, 'site': value['domain'], 'start': start },
                  success: function(data) { /*log('Filling ' + data + ' for ' + index);*/ $('#more-' + index).remove(); displayResults($('#' + index), data, value['fallback'] + query); moreResults(query, index, value, start + 10, TRY_AGAIN); },
-                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, index, value, start, try_again-1); } },
+                 error: function(d, msg) { log(d); log(msg); if (try_again > 0) { processQuery(query, index, value, start, try_again-1); } }
                 });
       }
 
+      $.extend({
+        keys:    function(obj){
+        var a = [];
+        $.each(obj, function(k){ a.push(k) });
+        return a;
+    }
+    });
+
 	 
       $(document).ready(function() {
-        $('#coverage').html("Networks supported: " + Object.keys(social_networks).join(" - "));
+        $('#coverage').html("Networks supported: " + $.keys(social_networks).join(" - "));
         var q = $.url(location.href).param('q');
         if (q) {
           $('#form').attr('value', q);
         }
          
+        $('#form').keypress(function(event) {
+         if (event.which == 13) {
+          var query = event.target.value;
+          log("Processing query ..." + query);
+          log(social_networks);
+          $('#result-panel').empty();
+          $.each(social_networks, function(index, value) {
+            var result_section = $('<div><h2>' + index + ' results for ' +  query + '</h2><ol id="' + index + '"/></div>');
+            processQuery(query, index, value, 0, TRY_AGAIN);
+            $('#result-panel').append(result_section);
+          });
+          return false;
+        }
+      });
+      
+
       });
 
     </script>
@@ -93,7 +102,7 @@
     <h1>NCMEC Social Network Search</h1>
 
     <div id="form-panel">
-      <input id="form" type="text" onkeypress="return processInput(event);"></input>
+      <input id="form" type="text"></input>
       <div id="coverage"></div>
     </div>
 
